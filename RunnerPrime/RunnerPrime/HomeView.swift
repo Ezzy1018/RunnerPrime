@@ -11,65 +11,148 @@ import CoreLocation
 struct HomeView: View {
     @EnvironmentObject var locationManager: LocationManager
     @EnvironmentObject var runRecorder: RunRecorder
+    @State private var showLastRun = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
-
-            Text("RunnerPrime")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .foregroundColor(.rpWhiteLiteral)
-
-            Text("Minimal, premium run tracking — track, claim, repeat.")
-                .multilineTextAlignment(.center)
-                .foregroundColor(.rpWhiteLiteral.opacity(0.8))
-                .padding(.horizontal)
-
-            Spacer()
-
-            if locationManager.authorizationStatus == .authorizedAlways || locationManager.authorizationStatus == .authorizedWhenInUse {
-                Button(action: {
-                    runRecorder.startRun()
-                }) {
-                    Text("Start Run")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.rpLimeLiteral)
-                        .foregroundColor(.rpEerieBlackLiteral)
-                        .cornerRadius(12)
-                        .padding(.horizontal)
-                }
-                .accessibilityIdentifier("startRunButton")
-            } else {
-                Button(action: {
-                    locationManager.requestAuthorization()
-                }) {
-                    Text("Enable Location")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.clear)
-                        .foregroundColor(.rpWhiteLiteral)
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.rpLimeLiteral, lineWidth: 1.5))
-                        .padding(.horizontal)
+        GeometryReader { geometry in
+            ZStack {
+                // Background
+                Color.rpEerieBlackLiteral
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Top section with branding - 25%
+                    VStack(spacing: 12) {
+                        Image(systemName: "figure.run.circle.fill")
+                            .font(.system(size: min(60, geometry.size.width * 0.15)))
+                            .foregroundColor(.rpLimeLiteral)
+                        
+                        Text("RunnerPrime")
+                            .font(.system(size: min(36, geometry.size.width * 0.09), weight: .bold))
+                            .foregroundColor(.rpWhiteLiteral)
+                        
+                        Text("Run. Track. Own.")
+                            .font(.system(size: min(18, geometry.size.width * 0.045)))
+                            .foregroundColor(.rpLimeLiteral)
+                    }
+                    .frame(height: geometry.size.height * 0.25)
+                    
+                    // Middle section with stats/info - 35%
+                    VStack(spacing: 16) {
+                        // Quick stats placeholder
+                        HStack(spacing: 20) {
+                            StatCard(title: "0", subtitle: "Runs", geometry: geometry)
+                            StatCard(title: "0 km", subtitle: "Distance", geometry: geometry)
+                            StatCard(title: "0 km²", subtitle: "Territory", geometry: geometry)
+                        }
+                        .padding(.horizontal, 24)
+                        
+                        Text("Start your first run to claim territory")
+                            .font(.system(size: min(14, geometry.size.width * 0.035)))
+                            .foregroundColor(.rpWhiteLiteral.opacity(0.6))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
+                    .frame(height: geometry.size.height * 0.35)
+                    
+                    Spacer()
+                    
+                    // Bottom section with CTAs - fixed at bottom
+                    VStack(spacing: 16) {
+                        // Primary CTA - Start Run
+                        if locationManager.authorizationStatus == .authorizedAlways || locationManager.authorizationStatus == .authorizedWhenInUse {
+                            Button(action: {
+                                runRecorder.startRun()
+                            }) {
+                                HStack {
+                                    Image(systemName: "play.circle.fill")
+                                        .font(.system(size: 24))
+                                    Text("Start Run")
+                                        .font(.system(size: 20, weight: .semibold))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 60)
+                                .background(Color.rpLimeLiteral)
+                                .foregroundColor(.rpEerieBlackLiteral)
+                                .cornerRadius(16)
+                            }
+                            .accessibilityIdentifier("startRunButton")
+                        } else {
+                            Button(action: {
+                                locationManager.requestAuthorization()
+                            }) {
+                                HStack {
+                                    Image(systemName: "location.circle.fill")
+                                        .font(.system(size: 24))
+                                    Text("Enable Location")
+                                        .font(.system(size: 20, weight: .semibold))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 60)
+                                .background(Color.clear)
+                                .foregroundColor(.rpLimeLiteral)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.rpLimeLiteral, lineWidth: 2)
+                                )
+                            }
+                        }
+                        
+                        // Secondary CTA - View Last Run
+                        Button(action: {
+                            showLastRun = true
+                        }) {
+                            HStack {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .font(.system(size: 18))
+                                Text("View Last Run")
+                                    .font(.system(size: 16, weight: .medium))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .foregroundColor(.rpWhiteLiteral.opacity(0.8))
+                        }
+                        
+                        // Footer text
+                        Text("Bangalore • Mumbai • Delhi")
+                            .font(.system(size: 12))
+                            .foregroundColor(.rpWhiteLiteral.opacity(0.4))
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, max(20, geometry.safeAreaInsets.bottom + 10))
                 }
             }
-
-            NavigationLink(destination: RunView()) {
-                Text("View Last Run")
-                    .foregroundColor(.rpWhiteLiteral)
-            }
-
-            Spacer()
-
-            Text("Designed for India — launch cities: Bangalore, Mumbai, Delhi")
-                .font(.footnote)
-                .foregroundColor(.rpWhiteLiteral.opacity(0.6))
-                .padding()
         }
-        .background(Color.rpEerieBlackLiteral.ignoresSafeArea())
+        .sheet(isPresented: $showLastRun) {
+            NavigationView {
+                RunView()
+            }
+        }
+    }
+}
+
+// MARK: - Supporting Views
+
+struct StatCard: View {
+    let title: String
+    let subtitle: String
+    let geometry: GeometryProxy
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(title)
+                .font(.system(size: min(24, geometry.size.width * 0.06), weight: .bold))
+                .foregroundColor(.rpLimeLiteral)
+            Text(subtitle)
+                .font(.system(size: min(12, geometry.size.width * 0.03)))
+                .foregroundColor(.rpWhiteLiteral.opacity(0.6))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.rpWhiteLiteral.opacity(0.05))
+        )
     }
 }
 

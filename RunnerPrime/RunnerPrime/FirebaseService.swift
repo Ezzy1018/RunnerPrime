@@ -17,15 +17,11 @@ import Combine
 final class FirebaseService: ObservableObject {
     static let shared = FirebaseService()
     
-    private let db = Firestore.firestore()
-    private let auth = Auth.auth()
-    
-    @Published var currentUser: UserRecord?
-    @Published var isAuthenticated = false
-    
-    private init() {
+    private lazy var db = Firestore.firestore()
+    private lazy var auth: Auth = {
+        let authInstance = Auth.auth()
         // Monitor auth state changes
-        auth.addStateDidChangeListener { [weak self] _, user in
+        authInstance.addStateDidChangeListener { [weak self] _, user in
             DispatchQueue.main.async {
                 self?.isAuthenticated = user != nil
                 if let user = user {
@@ -35,14 +31,21 @@ final class FirebaseService: ObservableObject {
                 }
             }
         }
+        return authInstance
+    }()
+    
+    @Published var currentUser: UserRecord?
+    @Published var isAuthenticated = false
+    
+    private init() {
+        // Empty init - Firebase will be configured before first use
     }
     
     // MARK: - Configuration
     
     func configure() {
-        if FirebaseApp.app() == nil {
-            FirebaseApp.configure()
-        }
+        // Trigger lazy initialization of auth to set up listener
+        _ = auth
         
         // Configure Firestore settings
         let settings = FirestoreSettings()

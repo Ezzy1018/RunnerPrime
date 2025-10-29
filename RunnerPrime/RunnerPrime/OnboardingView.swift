@@ -13,7 +13,7 @@ import AuthenticationServices
 /// Focuses on permission requests and value proposition for Indian users
 struct OnboardingView: View {
     @EnvironmentObject var locationManager: LocationManager
-    @StateObject private var firebaseService = FirebaseService.shared
+    @EnvironmentObject var firebaseService: FirebaseService
     
     @State private var currentStep = 0
     @State private var showLocationRationale = false
@@ -83,55 +83,60 @@ struct OnboardingView: View {
     }
     
     private var signInStep: some View {
-        VStack(spacing: 32) {
-            Spacer()
-            
-            // Logo and branding
-            VStack(spacing: 16) {
-                Image(systemName: "figure.run.circle.fill")
-                    .font(.system(size: 80))
-                    .foregroundColor(.rpLimeLiteral)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                Spacer()
+                    .frame(height: geometry.size.height * 0.15)
                 
-                Text("RunnerPrime")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.rpWhiteLiteral)
+                // Logo and branding
+                VStack(spacing: 16) {
+                    Image(systemName: "figure.run.circle.fill")
+                        .font(.system(size: min(80, geometry.size.width * 0.2)))
+                        .foregroundColor(.rpLimeLiteral)
+                    
+                    Text("RunnerPrime")
+                        .font(.system(size: min(34, geometry.size.width * 0.085), weight: .bold))
+                        .foregroundColor(.rpWhiteLiteral)
+                    
+                    Text("Ready to start your journey?")
+                        .font(.system(size: min(20, geometry.size.width * 0.05)))
+                        .foregroundColor(.rpWhiteLiteral.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                .frame(height: geometry.size.height * 0.3)
                 
-                Text("Ready to start your journey?")
-                    .font(.title3)
+                Spacer()
+                
+                // Sign in section
+                VStack(spacing: 20) {
+                    SignInWithAppleButton(.signIn) { request in
+                        request.requestedScopes = [.fullName, .email]
+                        request.nonce = firebaseService.generateNonce()
+                    } onCompletion: { result in
+                        handleAppleSignIn(result)
+                    }
+                    .frame(height: 55)
+                    .cornerRadius(12)
+                    
+                    Button("Continue Without Account") {
+                        completeOnboarding()
+                    }
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.rpWhiteLiteral.opacity(0.8))
-                    .multilineTextAlignment(.center)
-            }
-            
-            Spacer()
-            
-            // Sign in section
-            VStack(spacing: 20) {
-                SignInWithAppleButton(.signIn) { request in
-                    request.requestedScopes = [.fullName, .email]
-                    request.nonce = firebaseService.generateNonce()
-                } onCompletion: { result in
-                    handleAppleSignIn(result)
+                    .padding(.top, 8)
                 }
-                .frame(height: 50)
-                .cornerRadius(12)
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
                 
-                Button("Continue Without Account") {
-                    completeOnboarding()
-                }
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.rpWhiteLiteral.opacity(0.8))
-                .padding(.top, 8)
+                // Terms and privacy
+                Text("By continuing, you agree to our Terms of Service and Privacy Policy")
+                    .font(.caption)
+                    .foregroundColor(.rpWhiteLiteral.opacity(0.6))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                    .padding(.top, 20)
+                    .padding(.bottom, max(40, geometry.safeAreaInsets.bottom + 20))
             }
-            
-            // Terms and privacy
-            Text("By continuing, you agree to our Terms of Service and Privacy Policy")
-                .font(.caption)
-                .foregroundColor(.rpWhiteLiteral.opacity(0.6))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-                .padding(.bottom, 40)
         }
     }
     
@@ -205,51 +210,63 @@ struct OnboardingStepView: View {
     let onShowRationale: () -> Void
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 40) {
-                Spacer(minLength: 60)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // Top spacer - 10%
+                Spacer()
+                    .frame(height: geometry.size.height * 0.1)
                 
-                // Illustration
+                // Illustration - 20%
                 illustrationView
+                    .frame(height: geometry.size.height * 0.2)
                 
-                // Content
-                VStack(spacing: 20) {
+                // Content - 35%
+                VStack(spacing: min(20, geometry.size.height * 0.025)) {
                     Text(step.title)
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(size: min(32, geometry.size.width * 0.08), weight: .bold, design: .rounded))
                         .foregroundColor(.rpWhiteLiteral)
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(2)
                     
                     Text(step.subtitle)
-                        .font(.title2)
+                        .font(.system(size: min(24, geometry.size.width * 0.06), weight: .semibold))
                         .foregroundColor(.rpLimeLiteral)
                         .multilineTextAlignment(.center)
+                        .lineLimit(1)
                     
                     Text(step.description)
-                        .font(.body)
+                        .font(.system(size: min(16, geometry.size.width * 0.04)))
                         .foregroundColor(.rpWhiteLiteral.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
-                        .padding(.horizontal)
+                        .padding(.horizontal, 32)
+                        .lineLimit(4)
                 }
+                .frame(height: geometry.size.height * 0.35)
                 
-                // City focus for first step
+                // City focus or territory preview - 15%
                 if step.cityFocus {
                     cityFocusView
-                }
-                
-                // Territory preview for second step
-                if step.showMap {
+                        .frame(height: geometry.size.height * 0.15)
+                        .padding(.horizontal, 24)
+                } else if step.showMap {
                     territoryPreviewView
+                        .frame(height: geometry.size.height * 0.15)
+                        .padding(.horizontal, 24)
+                } else {
+                    Spacer()
+                        .frame(height: geometry.size.height * 0.15)
                 }
                 
-                Spacer(minLength: 40)
+                // Middle spacer - flexible
+                Spacer()
                 
-                // Action button
+                // Action button - fixed at bottom
                 actionButton
-                
-                Spacer(minLength: 40)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, max(20, geometry.safeAreaInsets.bottom + 20))
             }
-            .padding(.horizontal, 24)
         }
     }
     

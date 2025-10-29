@@ -8,6 +8,7 @@
 import SwiftUI
 import FirebaseCore
 import UIKit
+import UserNotifications
 
 @main
 struct RunnerPrimeApp: App {
@@ -108,7 +109,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
-        // Configure Firebase
+        // Configure Firebase FIRST before accessing FirebaseService.shared
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+        
+        // Now it's safe to access FirebaseService.shared
         FirebaseService.shared.configure()
         
         // Request notification permissions (for future use)
