@@ -76,6 +76,8 @@ struct OnboardingView: View {
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .edgesIgnoringSafeArea(.all)
         .sheet(isPresented: $showLocationRationale) {
             LocationRationaleView(locationManager: locationManager)
         }

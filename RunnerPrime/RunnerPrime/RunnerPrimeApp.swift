@@ -35,6 +35,8 @@ struct RunnerPrimeApp: App {
                     .environmentObject(locationManager)
                     .environmentObject(runRecorder)
                     .environmentObject(firebaseService)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .edgesIgnoringSafeArea(.all)
                     .onAppear {
                         // Bind location manager to run recorder
                         runRecorder.bind(locationManager: locationManager)
@@ -47,6 +49,8 @@ struct RunnerPrimeApp: App {
                     .environmentObject(locationManager)
                     .environmentObject(runRecorder)
                     .environmentObject(firebaseService)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .edgesIgnoringSafeArea(.all)
                     .onAppear {
                         runRecorder.bind(locationManager: locationManager)
                     }

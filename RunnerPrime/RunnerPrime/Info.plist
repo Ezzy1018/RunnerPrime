@@ -26,6 +26,12 @@
 		<string>fetch</string>
 	</array>
 	
+	<!-- Supported device families -->
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>1</integer>
+	</array>
+	
 	<!-- Required Device Capabilities -->
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
@@ -60,6 +66,21 @@
 	
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	
+	<!-- Launch screen optimization -->
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIImageName</key>
+		<string></string>
+		<key>UIColorName</key>
+		<string></string>
+	</dict>
+	
+	<!-- Support full screen on all iPhone models -->
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
 </dict>
 </plist>
 

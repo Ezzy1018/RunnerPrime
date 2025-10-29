@@ -20,7 +20,8 @@ struct HomeView: View {
             ZStack {
                 // Background
                 Color.rpEerieBlackLiteral
-                    .ignoresSafeArea()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .edgesIgnoringSafeArea(.all)
                 
                 VStack(spacing: 0) {
                     // Top section with branding - 25%
@@ -132,6 +133,8 @@ struct HomeView: View {
         .fullScreenCover(isPresented: $navigateToActiveRun) {
             ActiveRunView()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .edgesIgnoringSafeArea(.all)
         .onAppear {
             localStore.loadRuns()
         }
