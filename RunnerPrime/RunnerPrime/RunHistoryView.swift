@@ -10,6 +10,8 @@ import SwiftUI
 struct RunHistoryView: View {
     @StateObject private var localStore = LocalStore.shared
     @Environment(\.dismiss) var dismiss
+    @State private var selectedRun: RunModel?
+    @State private var showRunDetail = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -63,6 +65,10 @@ struct RunHistoryView: View {
                             LazyVStack(spacing: 12) {
                                 ForEach(localStore.allRuns) { run in
                                     RunHistoryCard(run: run)
+                                        .onTapGesture {
+                                            selectedRun = run
+                                            showRunDetail = true
+                                        }
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -73,6 +79,11 @@ struct RunHistoryView: View {
             }
         }
         .navigationBarHidden(true)
+        .sheet(isPresented: $showRunDetail) {
+            if let run = selectedRun {
+                RunDetailView(run: run)
+            }
+        }
         .onAppear {
             localStore.loadRuns()
         }
@@ -84,10 +95,18 @@ struct RunHistoryCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Date
-            Text(formatDate(run.startTime))
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.rpLimeLiteral)
+            // Date with chevron indicator
+            HStack {
+                Text(formatDate(run.startTime))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.rpLimeLiteral)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.rpWhiteLiteral.opacity(0.3))
+            }
             
             // Stats row
             HStack(spacing: 20) {
@@ -113,12 +132,12 @@ struct RunHistoryCard: View {
                         .foregroundColor(.rpWhiteLiteral.opacity(0.6))
                 }
                 
-                // Pace
+                // Speed
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(formatPace(run.duration, run.distance))
+                    Text(formatSpeed(run.duration, run.distance))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.rpWhiteLiteral)
-                    Text("Pace")
+                    Text("Avg Speed")
                         .font(.system(size: 12))
                         .foregroundColor(.rpWhiteLiteral.opacity(0.6))
                 }
@@ -158,13 +177,12 @@ struct RunHistoryCard: View {
         }
     }
     
-    private func formatPace(_ duration: TimeInterval, _ distance: Double) -> String {
-        guard distance > 0 else { return "--:--" }
+    private func formatSpeed(_ duration: TimeInterval, _ distance: Double) -> String {
+        guard distance > 0 && duration > 0 else { return "0.0 km/h" }
         let km = distance / 1000.0
-        let secondsPerKm = duration / km
-        let minutes = Int(secondsPerKm) / 60
-        let seconds = Int(secondsPerKm) % 60
-        return String(format: "%d:%02d /km", minutes, seconds)
+        let hours = duration / 3600.0
+        let kmPerHour = km / hours
+        return String(format: "%.1f km/h", kmPerHour)
     }
 }
 

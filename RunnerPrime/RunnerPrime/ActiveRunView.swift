@@ -44,7 +44,7 @@ struct ActiveRunView: View {
                             .frame(width: 44, height: 44)
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, geometry.safeAreaInsets.top + 10)
+                    .padding(.top, geometry.safeAreaInsets.top + 34)
                     
                     // Main stats area - 70% of screen
                     VStack(spacing: 24) {
@@ -73,11 +73,11 @@ struct ActiveRunView: View {
                                 geometry: geometry
                             )
                             
-                            // Pace
+                            // Speed
                             StatPill(
                                 icon: "speedometer",
-                                label: "Pace",
-                                value: formatPace(runRecorder.livePace),
+                                label: "Speed",
+                                value: formatSpeed(runRecorder.livePace),
                                 geometry: geometry
                             )
                         }
@@ -161,13 +161,13 @@ struct ActiveRunView: View {
         }
     }
     
-    private func formatPace(_ secondsPerKm: Double) -> String {
-        if secondsPerKm <= 0 || secondsPerKm.isInfinite {
-            return "--:--"
+    private func formatSpeed(_ secondsPerKm: Double) -> String {
+        if secondsPerKm <= 0 || secondsPerKm.isInfinite || secondsPerKm > 10000 {
+            return "0.0 km/h"
         }
-        let minutes = Int(secondsPerKm) / 60
-        let seconds = Int(secondsPerKm) % 60
-        return String(format: "%d:%02d", minutes, seconds)
+        // Convert seconds per km to km per hour
+        let kmPerHour = 3600.0 / secondsPerKm
+        return String(format: "%.1f km/h", kmPerHour)
     }
 }
 

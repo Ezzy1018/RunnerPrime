@@ -24,8 +24,11 @@ struct HomeView: View {
                     .edgesIgnoringSafeArea(.all)
                 
                 VStack(spacing: 0) {
-                    // Top section with branding - 25%
+                    // Top section with branding - 25% + 80px padding
                     VStack(spacing: 12) {
+                        Spacer()
+                            .frame(height: 80)
+                        
                         Image(systemName: "figure.run.circle.fill")
                             .font(.system(size: min(60, geometry.size.width * 0.15)))
                             .foregroundColor(.rpLimeLiteral)
@@ -38,7 +41,7 @@ struct HomeView: View {
                             .font(.system(size: min(18, geometry.size.width * 0.045)))
                             .foregroundColor(.rpLimeLiteral)
                     }
-                    .frame(height: geometry.size.height * 0.25)
+                    .frame(height: geometry.size.height * 0.25 + 80)
                     
                     // Middle section with stats/info - 35%
                     VStack(spacing: 16) {
@@ -118,7 +121,7 @@ struct HomeView: View {
                         }
                         
                         // Footer text
-                        Text("Bangalore • Mumbai • Delhi")
+                        Text("Built with love in India 🇮🇳")
                             .font(.system(size: 12))
                             .foregroundColor(.rpWhiteLiteral.opacity(0.4))
                     }

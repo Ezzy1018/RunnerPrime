@@ -30,6 +30,10 @@ class RunRecorder: ObservableObject {
     
     private var runTimer: Timer?
     
+    // Pause tracking
+    private var totalPausedDuration: TimeInterval = 0
+    private var pauseStartTime: Date?
+    
     init(locationManager: LocationManager?) {
         self.locationManager = locationManager
         setupSubscriptions()
@@ -69,6 +73,10 @@ class RunRecorder: ObservableObject {
         livePace = 0
         currentTerritoryInfo = nil
         
+        // Reset pause tracking
+        totalPausedDuration = 0
+        pauseStartTime = nil
+        
         // Start location updates
         locationManager?.startUpdates()
         
@@ -90,6 +98,7 @@ class RunRecorder: ObservableObject {
         guard isRecording && !isPaused else { return }
         
         isPaused = true
+        pauseStartTime = Date()
         locationManager?.stopUpdates()
         stopLiveTimer()
         
@@ -97,11 +106,19 @@ class RunRecorder: ObservableObject {
         AnalyticsService.shared.logRunPause(sessionId: sessionId ?? "unknown", elapsedSeconds: liveDuration)
         AnalyticsService.shared.logEvent("run_paused")
         
-        print("⏸️ Run paused")
+        print("⏸️ Run paused at \(liveDuration)s")
     }
     
     func resumeRun() {
         guard isRecording && isPaused else { return }
+        
+        // Calculate how long we were paused
+        if let pauseStart = pauseStartTime {
+            let pauseDuration = Date().timeIntervalSince(pauseStart)
+            totalPausedDuration += pauseDuration
+            pauseStartTime = nil
+            print("⏸️ Was paused for \(pauseDuration)s, total paused: \(totalPausedDuration)s")
+        }
         
         isPaused = false
         locationManager?.startUpdates()
@@ -186,11 +203,14 @@ class RunRecorder: ObservableObject {
     
     private func updateLiveStats(run: RunModel) {
         liveDistance = run.distance
-        liveDuration = run.duration
+        
+        // Calculate actual duration accounting for paused time
+        let totalElapsed = Date().timeIntervalSince(run.startTime)
+        liveDuration = totalElapsed - totalPausedDuration
         
         // Calculate pace (seconds per km)
         if run.distance > 100 { // Only calculate after 100m to avoid crazy initial pace
-            livePace = run.duration / (run.distance / 1000)
+            livePace = liveDuration / (run.distance / 1000)
         }
     }
     
@@ -214,7 +234,8 @@ class RunRecorder: ObservableObject {
     
     private func updateLiveDuration() {
         guard let run = currentRun, isRecording && !isPaused else { return }
-        liveDuration = Date().timeIntervalSince(run.startTime)
+        let totalElapsed = Date().timeIntervalSince(run.startTime)
+        liveDuration = totalElapsed - totalPausedDuration
     }
     
     // MARK: - Persistence & Upload

@@ -23,7 +23,7 @@ struct OnboardingView: View {
     private let onboardingSteps: [OnboardingStep] = [
         OnboardingStep(
             title: "Welcome to RunnerPrime",
-            subtitle: "Minimal luxury running for India",
+            subtitle: "Built in India, for Indian runners",
             description: "Track your runs, claim territory, and build lasting fitness habits with our premium experience.",
             illustration: "figure.run",
             primaryAction: "Get Started",
@@ -286,15 +286,13 @@ struct OnboardingStepView: View {
     
     private var cityFocusView: some View {
         VStack(spacing: 16) {
-            Text("🎯 Launching in:")
-                .font(.headline)
+            Text("🇮🇳 Built in India")
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.rpWhiteLiteral)
             
-            HStack(spacing: 20) {
-                CityBadge(name: "Bangalore")
-                CityBadge(name: "Mumbai")
-                CityBadge(name: "Delhi")
-            }
+            Text("Made with love for Indian runners")
+                .font(.system(size: 14))
+                .foregroundColor(.rpWhiteLiteral.opacity(0.7))
         }
         .padding()
         .background(
