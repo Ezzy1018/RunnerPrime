@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Basic App Information -->
+    <key>CFBundleDisplayName</key>
+    <string>RunnerPrime</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.yourteam.runnerprime</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    
+    <!-- Privacy Usage Descriptions -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>RunnerPrime needs location access to track your runs and calculate territory claims. Your location data is processed securely and never shared.</string>
+    
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Background location allows RunnerPrime to continue tracking during runs even when the app isn't active. This ensures accurate distance and territory calculations.</string>
+    
+    <key>NSHealthShareUsageDescription</key>
+    <string>Connect with Apple Health to import your workout history and enhance your running analytics. This data stays private and is used only to improve your experience.</string>
+    
+    <!-- Required Device Capabilities -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>location-services</string>
+        <string>gps</string>
+    </array>
+    
+    <!-- Supported Interface Orientations -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    
+    <!-- Background Modes -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+        <string>background-fetch</string>
+    </array>
+    
+    <!-- Launch Configuration -->
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    
+    <!-- Scene Configuration -->
+    <key>UISceneDelegate</key>
+    <string>SceneDelegate</string>
+    
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <key>UIWindowSceneSessionRoleApplication</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>Default Configuration</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+                </dict>
+            </array>
+        </dict>
+    </dict>
+    
+    <!-- App Transport Security -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <!-- Firebase Domains -->
+            <key>googleapis.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSExceptionMinimumTLSVersion</key>
+                <string>TLSv1.2</string>
+            </dict>
+            <key>firebaseio.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+                <key>NSExceptionMinimumTLSVersion</key>
+                <string>TLSv1.2</string>
+            </dict>
+        </dict>
+    </dict>
+    
+    <!-- Apple Sign-In Configuration -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.yourteam.runnerprime</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.yourteam.runnerprime</string>
+            </array>
+        </dict>
+    </array>
+    
+    <!-- Localization -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>hi</string>
+    </array>
+    
+    <!-- Status Bar Configuration -->
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleLightContent</string>
+    
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
+    
+    <!-- Minimum OS Version -->
+    <key>MinimumOSVersion</key>
+    <string>15.0</string>
+    
+    <!-- User Interface Style -->
+    <key>UIUserInterfaceStyle</key>
+    <string>Dark</string>
+    
+    <!-- Firebase Configuration -->
+    <!-- Note: Firebase will automatically add required entries when GoogleService-Info.plist is added -->
+    
+    <!-- Map Configuration -->
+    <key>MKDirectionsApplicationSupportedModes</key>
+    <array>
+        <string>MKDirectionsModePedestrian</string>
+    </array>
+    
+    <!-- HealthKit Configuration -->
+    <key>NSHealthShareUsageDescription</key>
+    <string>RunnerPrime can import your workout history from Apple Health to provide better analytics and insights.</string>
+    
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>RunnerPrime can save your runs to Apple Health to keep your fitness data synchronized.</string>
+    
+    <!-- App Store Configuration -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+    
+    <!-- Intent Configuration for Shortcuts -->
+    <key>NSUserActivityTypes</key>
+    <array>
+        <string>com.yourteam.runnerprime.start-run</string>
+        <string>com.yourteam.runnerprime.view-stats</string>
+    </array>
+    
+</dict>
+</plist>
+
+<!--
+Info.plist Configuration Notes:
+
+🔐 Privacy Strings:
+- Clear explanations for location, health data access
+- Emphasizes privacy and security
+- Indian English tone and terminology
+
+📱 Device Requirements:
+- GPS required for core functionality
+- Location services mandatory
+- iOS 15.0+ minimum for modern SwiftUI features
+
+🌍 Localization:
+- English primary, Hindi secondary
+- Ready for expansion to other Indian languages
+- Metric units default for Indian users
+
+🔒 Security:
+- App Transport Security enforced
+- HTTPS only connections
+- Firebase domains whitelisted
+- No arbitrary network loads
+
+🎨 UI Configuration:
+- Dark theme preferred (matches app design)
+- Portrait orientation primary
+- Light content status bar
+
+⚙️ Background Capabilities:
+- Location tracking for active runs
+- Background fetch for data sync
+- No unnecessary background modes
+
+🍎 Apple Integration:
+- Sign in with Apple configured
+- HealthKit read/write permissions
+- MapKit pedestrian directions
+- User activity for Siri shortcuts
+
+📊 Analytics & Compliance:
+- No encryption export compliance needed
+- Privacy-first approach
+- GDPR-ready configuration
+-->

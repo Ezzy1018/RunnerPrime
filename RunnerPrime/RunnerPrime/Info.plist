@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Location Permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RunnerPrime needs location access to track your runs and calculate territory claims.</string>
+	
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Background location allows RunnerPrime to continue tracking during runs even when the app isn't active.</string>
+	
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>RunnerPrime requires always location access to track your runs in the background and ensure accurate route recording.</string>
+	
+	<!-- HealthKit Permissions -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>Connect with Apple Health to import your workout history and enhance your running analytics.</string>
+	
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>RunnerPrime can save your runs to Apple Health to keep all your fitness data in one place.</string>
+	
+	<!-- Background Modes -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>fetch</string>
+	</array>
+	
+	<!-- Required Device Capabilities -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>location-services</string>
+		<string>gps</string>
+	</array>
+	
+	<!-- App Configuration -->
+	<key>CFBundleDisplayName</key>
+	<string>RunnerPrime</string>
+	
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.healthcare-fitness</string>
+</dict>
+</plist>
+
