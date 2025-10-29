@@ -21,7 +21,7 @@ final class FirebaseService: ObservableObject {
     private lazy var auth: Auth = {
         let authInstance = Auth.auth()
         // Monitor auth state changes
-        authInstance.addStateDidChangeListener { [weak self] _, user in
+        _ = authInstance.addStateDidChangeListener { [weak self] _, user in
             DispatchQueue.main.async {
                 self?.isAuthenticated = user != nil
                 if let user = user {

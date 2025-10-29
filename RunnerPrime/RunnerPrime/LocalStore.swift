@@ -6,11 +6,14 @@
 //
 
 import Foundation
+import Combine
 
 /// LocalStore handles offline run persistence and local data management
 /// Ensures runs are never lost even without internet connectivity
-final class LocalStore {
+final class LocalStore: ObservableObject {
     static let shared = LocalStore()
+    
+    @Published private(set) var allRuns: [RunModel] = []
     
     private let fileManager = FileManager.default
     private let encoder = JSONEncoder()
@@ -58,6 +61,12 @@ final class LocalStore {
             try data.write(to: lastRunURL)
             
             print("✅ Run saved locally: \(runFileURL.lastPathComponent)")
+            
+            // Reload runs to update UI
+            DispatchQueue.main.async { [weak self] in
+                self?.loadRuns()
+            }
+            
             return runFileURL
         } catch {
             print("❌ Failed to save run locally: \(error)")
@@ -101,8 +110,13 @@ final class LocalStore {
         }
     }
     
+    /// Load all runs from disk into memory
+    func loadRuns() {
+        allRuns = listSavedRuns()
+    }
+    
     /// List all saved runs (sorted by date, newest first)
-    func listSavedRuns() -> [RunModel] {
+    private func listSavedRuns() -> [RunModel] {
         do {
             let fileURLs = try fileManager.contentsOfDirectory(at: runsDirectory, 
                                                               includingPropertiesForKeys: [.creationDateKey])

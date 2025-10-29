@@ -11,7 +11,9 @@ import CoreLocation
 struct HomeView: View {
     @EnvironmentObject var locationManager: LocationManager
     @EnvironmentObject var runRecorder: RunRecorder
-    @State private var showLastRun = false
+    @StateObject private var localStore = LocalStore.shared
+    @State private var showRunHistory = false
+    @State private var navigateToActiveRun = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -39,10 +41,10 @@ struct HomeView: View {
                     
                     // Middle section with stats/info - 35%
                     VStack(spacing: 16) {
-                        // Quick stats placeholder
+                        // Quick stats from saved runs
                         HStack(spacing: 20) {
-                            StatCard(title: "0", subtitle: "Runs", geometry: geometry)
-                            StatCard(title: "0 km", subtitle: "Distance", geometry: geometry)
+                            StatCard(title: "\(localStore.allRuns.count)", subtitle: "Runs", geometry: geometry)
+                            StatCard(title: formatTotalDistance(), subtitle: "Distance", geometry: geometry)
                             StatCard(title: "0 km²", subtitle: "Territory", geometry: geometry)
                         }
                         .padding(.horizontal, 24)
@@ -63,6 +65,7 @@ struct HomeView: View {
                         if locationManager.authorizationStatus == .authorizedAlways || locationManager.authorizationStatus == .authorizedWhenInUse {
                             Button(action: {
                                 runRecorder.startRun()
+                                navigateToActiveRun = true
                             }) {
                                 HStack {
                                     Image(systemName: "play.circle.fill")
@@ -100,7 +103,7 @@ struct HomeView: View {
                         
                         // Secondary CTA - View Last Run
                         Button(action: {
-                            showLastRun = true
+                            showRunHistory = true
                         }) {
                             HStack {
                                 Image(systemName: "clock.arrow.circlepath")
@@ -123,11 +126,21 @@ struct HomeView: View {
                 }
             }
         }
-        .sheet(isPresented: $showLastRun) {
-            NavigationView {
-                RunView()
-            }
+        .sheet(isPresented: $showRunHistory) {
+            RunHistoryView()
         }
+        .fullScreenCover(isPresented: $navigateToActiveRun) {
+            ActiveRunView()
+        }
+        .onAppear {
+            localStore.loadRuns()
+        }
+    }
+    
+    private func formatTotalDistance() -> String {
+        let totalMeters = localStore.allRuns.reduce(0.0) { $0 + $1.distance }
+        let km = totalMeters / 1000.0
+        return String(format: "%.1f km", km)
     }
 }
 
