@@ -69,10 +69,8 @@ final class ShareGenerator {
         options.size = mapSize
         options.scale = UIScreen.main.scale
         
-        // Configure map appearance
-        let config = MKStandardMapConfiguration(elevationStyle: .flat)
-        config.pointOfInterestFilter = .excludingAll
-        options.preferredConfiguration = config
+        // Configure map appearance (iOS 15 compatible)
+        options.pointOfInterestFilter = .excludingAll
         
         // Calculate map region to fit the run
         let coordinates = run.points.map { 
@@ -91,11 +89,29 @@ final class ShareGenerator {
                 return
             }
             
+            // Calculate mapRect from region
+            let topLeft = CLLocationCoordinate2D(
+                latitude: region.center.latitude + region.span.latitudeDelta / 2,
+                longitude: region.center.longitude - region.span.longitudeDelta / 2
+            )
+            let bottomRight = CLLocationCoordinate2D(
+                latitude: region.center.latitude - region.span.latitudeDelta / 2,
+                longitude: region.center.longitude + region.span.longitudeDelta / 2
+            )
+            let topLeftMapPoint = MKMapPoint(topLeft)
+            let bottomRightMapPoint = MKMapPoint(bottomRight)
+            let mapRect = MKMapRect(
+                x: min(topLeftMapPoint.x, bottomRightMapPoint.x),
+                y: min(topLeftMapPoint.y, bottomRightMapPoint.y),
+                width: abs(bottomRightMapPoint.x - topLeftMapPoint.x),
+                height: abs(bottomRightMapPoint.y - topLeftMapPoint.y)
+            )
+            
             // Overlay the run route on the map
             let overlaidImage = overlayRunRoute(
                 on: snapshot.image,
                 points: run.points,
-                mapRect: snapshot.mapRect,
+                mapRect: mapRect,
                 region: region
             )
             
@@ -245,7 +261,7 @@ final class ShareGenerator {
             )
             
             // Branding
-            drawBranding(context: context.cgContext, in: rect)
+            drawBranding(context: context.cgContext, run: run, in: rect)
         }
     }
     
@@ -350,7 +366,7 @@ final class ShareGenerator {
         value.draw(in: valueRect, withAttributes: valueAttributes)
     }
     
-    private static func drawBranding(context: CGContext, in rect: CGRect) {
+    private static func drawBranding(context: CGContext, run: RunModel, in rect: CGRect) {
         let brandingText = "RunnerPrime"
         let taglineText = "Run. Track. Own."
         

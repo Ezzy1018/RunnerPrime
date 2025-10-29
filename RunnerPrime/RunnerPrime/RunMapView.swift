@@ -17,9 +17,7 @@ struct RunMapView: UIViewRepresentable {
         mapView.showsScale = false
         mapView.isRotateEnabled = false
         mapView.overrideUserInterfaceStyle = .dark
-        let config = MKStandardMapConfiguration(elevationStyle: .flat)
-        config.pointOfInterestFilter = .excludingAll
-        mapView.preferredConfiguration = config
+        mapView.pointOfInterestFilter = .excludingAll
         return mapView
     }
 

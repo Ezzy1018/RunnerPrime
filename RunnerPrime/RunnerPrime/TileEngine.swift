@@ -100,6 +100,16 @@ public struct TerritoryInfo {
         return totalAreaSquareMeters / 1_000_000.0
     }
     
+    public var areaDisplayString: String {
+        if totalAreaSquareMeters < 1000 {
+            return String(format: "%.0f m²", totalAreaSquareMeters)
+        } else if totalAreaSquareKilometers < 1.0 {
+            return String(format: "%.0f m²", totalAreaSquareMeters)
+        } else {
+            return String(format: "%.2f km²", totalAreaSquareKilometers)
+        }
+    }
+    
     public init(tileIds: Set<String>, tileCount: Int, totalAreaSquareMeters: Double) {
         self.tileIds = tileIds
         self.tileCount = tileCount

@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 import Combine
+import UIKit
 
 /// RunRecorder manages the core run recording logic with territory mapping
 /// Integrates GPS tracking, territory calculation, and persistence
@@ -93,7 +94,7 @@ class RunRecorder: ObservableObject {
         stopLiveTimer()
         
         // Analytics
-        AnalyticsService.shared.logRunPause(sessionId: sessionId ?? "unknown")
+        AnalyticsService.shared.logRunPause(sessionId: sessionId ?? "unknown", elapsedSeconds: liveDuration)
         AnalyticsService.shared.logEvent("run_paused")
         
         print("⏸️ Run paused")

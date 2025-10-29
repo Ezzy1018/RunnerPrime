@@ -70,9 +70,9 @@ final class FirebaseService: ObservableObject {
             return
         }
         
-        let credential = OAuthProvider.credential(withProviderID: "apple.com",
-                                                idToken: idTokenString,
-                                                rawNonce: nonce)
+        let credential = OAuthProvider.appleCredential(withIDToken: idTokenString,
+                                                      rawNonce: nonce,
+                                                      fullName: nil)
         
         auth.signIn(with: credential) { [weak self] authResult, error in
             if let error = error {
@@ -89,8 +89,8 @@ final class FirebaseService: ObservableObject {
             self?.createOrUpdateUser(
                 userId: user.uid,
                 email: user.email,
-                displayName: credential.fullName?.givenName,
-                appleUserId: credential.user
+                displayName: user.displayName,
+                appleUserId: user.uid
             ) { result in
                 completion(result)
             }
@@ -236,7 +236,7 @@ final class FirebaseService: ObservableObject {
                 completion(.success(run.id))
                 
                 // Log analytics event
-                AnalyticsService.shared.logEvent("run_upload", parameters: [
+                AnalyticsService.shared.logEvent("run_upload", params: [
                     "run_id": run.id,
                     "distance_m": run.distance,
                     "duration_s": run.duration
@@ -311,7 +311,7 @@ final class FirebaseService: ObservableObject {
                 completion(.success(()))
                 
                 // Log analytics event
-                AnalyticsService.shared.logEvent("tiles_claimed", parameters: [
+                AnalyticsService.shared.logEvent("tiles_claimed", params: [
                     "tile_count": tileIds.count,
                     "run_id": runId,
                     "period": period
@@ -400,7 +400,12 @@ final class FirebaseService: ObservableObject {
             return RunPoint(latitude: lat, longitude: lon, timestamp: timestamp)
         }
         
-        var run = RunModel(id: runId, startTime: startTime, endTime: endTime, points: points, distance: distance, duration: duration)
+        var run = RunModel(startTime: startTime)
+        run.id = runId
+        run.endTime = endTime
+        run.points = points
+        run.distance = distance
+        run.duration = duration
         return run
     }
     

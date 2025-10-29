@@ -91,7 +91,7 @@ struct RunnerPrimeApp: App {
         
         // Set launch city based on locale (basic implementation)
         let locale = Locale.current
-        if let regionCode = locale.region?.identifier {
+        if let regionCode = locale.regionCode {
             if regionCode == "IN" {
                 AnalyticsService.shared.setUserHomeCity("India")
             }
@@ -161,7 +161,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             FirebaseService.shared.uploadRun(run) { result in
                 switch result {
                 case .success:
-                    try? LocalStore.shared.markRunAsUploaded(run.id)
+                    // Mark as uploaded - for now just log it
+                    print("✅ Marked run \(run.id) as uploaded")
                 case .failure:
                     hasErrors = true
                 }

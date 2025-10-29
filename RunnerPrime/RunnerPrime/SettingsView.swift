@@ -80,10 +80,10 @@ struct SettingsView: View {
         } message: {
             Text("This will permanently delete your account and all cloud data. Local runs will remain on device.")
         }
-        .onChange(of: selectedUnits) { _, newValue in
+        .onChange(of: selectedUnits) { newValue in
             updateUnits(newValue)
         }
-        .onChange(of: selectedLanguage) { _, newValue in
+        .onChange(of: selectedLanguage) { newValue in
             updateLanguage(newValue)
         }
     }
@@ -502,7 +502,7 @@ struct SettingsToggleRow: View {
             // Toggle
             Toggle("", isOn: $isOn)
                 .toggleStyle(SwitchToggleStyle(tint: .rpLimeLiteral))
-                .onChange(of: isOn) { _, newValue in
+                .onChange(of: isOn) { newValue in
                     if newValue {
                         onToggle?()
                     }

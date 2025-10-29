@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct HomeView: View {
     @EnvironmentObject var locationManager: LocationManager
