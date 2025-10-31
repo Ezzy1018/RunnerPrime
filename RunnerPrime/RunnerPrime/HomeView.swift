@@ -21,7 +21,6 @@ struct HomeView: View {
                 // Background
                 Color.rpEerieBlackLiteral
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .edgesIgnoringSafeArea(.all)
                 
                 VStack(spacing: 0) {
                     // Top section with branding - 25% + 80px padding
@@ -49,15 +48,17 @@ struct HomeView: View {
                         HStack(spacing: 20) {
                             StatCard(title: "\(localStore.allRuns.count)", subtitle: "Runs", geometry: geometry)
                             StatCard(title: formatTotalDistance(), subtitle: "Distance", geometry: geometry)
-                            StatCard(title: "0 km²", subtitle: "Territory", geometry: geometry)
+                            StatCard(title: formatTotalTerritory(), subtitle: "Territory", geometry: geometry)
                         }
                         .padding(.horizontal, 24)
                         
-                        Text("Start your first run to claim territory")
-                            .font(.system(size: min(14, geometry.size.width * 0.035)))
-                            .foregroundColor(.rpWhiteLiteral.opacity(0.6))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 32)
+                        if !hasRunToday() {
+                            Text(localStore.allRuns.isEmpty ? "Start your first run" : "Start your run for today")
+                                .font(.system(size: min(14, geometry.size.width * 0.035)))
+                                .foregroundColor(.rpWhiteLiteral.opacity(0.6))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 32)
+                        }
                     }
                     .frame(height: geometry.size.height * 0.35)
                     
@@ -126,7 +127,7 @@ struct HomeView: View {
                             .foregroundColor(.rpWhiteLiteral.opacity(0.4))
                     }
                     .padding(.horizontal, 24)
-                    .padding(.bottom, max(20, geometry.safeAreaInsets.bottom + 10))
+                    .padding(.bottom, geometry.safeAreaInsets.bottom + 24)
                 }
             }
         }
@@ -137,7 +138,6 @@ struct HomeView: View {
             ActiveRunView()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .edgesIgnoringSafeArea(.all)
         .onAppear {
             localStore.loadRuns()
         }
@@ -147,6 +147,29 @@ struct HomeView: View {
         let totalMeters = localStore.allRuns.reduce(0.0) { $0 + $1.distance }
         let km = totalMeters / 1000.0
         return String(format: "%.1f km", km)
+    }
+
+    private func hasRunToday() -> Bool {
+        let cal = Calendar.current
+        return localStore.allRuns.contains { cal.isDateInToday($0.startTime) }
+    }
+
+    private func formatTotalTerritory() -> String {
+        let engine = TileEngine()
+        var allTiles: Set<String> = []
+        for run in localStore.allRuns {
+            if run.points.isEmpty { continue }
+            let coords = run.points.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+            let hull = coords.count >= 10 ? computeConcaveHull(points: coords, k: 3) : nil
+            let info = engine.processRun(run, polygon: hull)
+            allTiles.formUnion(info.tileIds)
+        }
+        let areaSqM = engine.areaForTiles(allTiles)
+        let areaKm2 = areaSqM / 1_000_000.0
+        if areaKm2 < 0.01 {
+            return String(format: "%.0f m²", areaSqM)
+        }
+        return String(format: "%.2f km²", areaKm2)
     }
 }
 

@@ -9,6 +9,7 @@ import Foundation
 import UIKit
 import CoreGraphics
 import MapKit
+import CoreLocation
 
 /// ShareGenerator creates beautiful, branded run images for social sharing
 /// Combines map snapshots with run statistics and RunnerPrime branding
@@ -107,12 +108,17 @@ final class ShareGenerator {
                 height: abs(bottomRightMapPoint.y - topLeftMapPoint.y)
             )
             
-            // Overlay the run route on the map
+            // Compute concave hull for filled area (optional)
+            let routeCoords = run.points.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+            let hull = routeCoords.count >= 10 ? computeConcaveHull(points: routeCoords, k: 3) : nil
+
+            // Overlay the filled area (if any) and the run route on the map
             let overlaidImage = overlayRunRoute(
                 on: snapshot.image,
                 points: run.points,
                 mapRect: mapRect,
-                region: region
+                region: region,
+                hull: hull
             )
             
             completion(overlaidImage)
@@ -149,7 +155,8 @@ final class ShareGenerator {
         on mapImage: UIImage,
         points: [RunPoint],
         mapRect: MKMapRect,
-        region: MKCoordinateRegion
+        region: MKCoordinateRegion,
+        hull: [CLLocationCoordinate2D]?
     ) -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: mapImage.size)
         
@@ -157,6 +164,28 @@ final class ShareGenerator {
             // Draw the map background
             mapImage.draw(at: .zero)
             
+            // Draw filled polygon for territory if available
+            if let hull = hull {
+                let hullImagePoints: [CGPoint] = hull.compactMap { coord in
+                    let mapPoint = MKMapPoint(coord)
+                    guard mapRect.contains(mapPoint) else { return nil }
+                    let x = (mapPoint.x - mapRect.minX) / mapRect.width * mapImage.size.width
+                    let y = (mapPoint.y - mapRect.minY) / mapRect.height * mapImage.size.height
+                    return CGPoint(x: x, y: mapImage.size.height - y)
+                }
+                if hullImagePoints.count >= 3 {
+                    let path = UIBezierPath()
+                    path.move(to: hullImagePoints[0])
+                    for p in hullImagePoints.dropFirst() { path.addLine(to: p) }
+                    path.close()
+                    accentColor.withAlphaComponent(0.18).setFill()
+                    path.fill()
+                    accentColor.withAlphaComponent(0.35).setStroke()
+                    path.lineWidth = 2
+                    path.stroke()
+                }
+            }
+
             // Convert coordinates to image points
             let imagePoints = points.compactMap { point -> CGPoint? in
                 let coordinate = CLLocationCoordinate2D(latitude: point.latitude, longitude: point.longitude)

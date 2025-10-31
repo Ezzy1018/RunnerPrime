@@ -11,7 +11,7 @@ import MapKit
 struct RunDetailView: View {
     let run: RunModel
     @Environment(\.dismiss) var dismiss
-    @State private var isClosedLoop: Bool = false
+    @State private var hasArea: Bool = false
     @State private var areaKm2: Double = 0.0
     
     var body: some View {
@@ -43,7 +43,7 @@ struct RunDetailView: View {
                     .padding(.bottom, 20)
                     
                     // Map view - 50% of screen
-                    RunDetailMapView(run: run, isClosedLoop: $isClosedLoop, areaKm2: $areaKm2)
+                    RunDetailMapView(run: run, hasArea: $hasArea, areaKm2: $areaKm2)
                         .frame(height: geometry.size.height * 0.5)
                         .cornerRadius(16)
                         .padding(.horizontal, 20)
@@ -81,7 +81,7 @@ struct RunDetailView: View {
                                     icon: "speedometer"
                                 )
                                 
-                                if isClosedLoop {
+                                if hasArea {
                                     StatDetailCard(
                                         title: "Area Covered",
                                         value: String(format: "%.3f km²", areaKm2),
@@ -105,11 +105,11 @@ struct RunDetailView: View {
                                     Spacer()
                                 }
                                 
-                                if isClosedLoop {
+                                if hasArea {
                                     HStack {
                                         Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
                                             .foregroundColor(.rpLimeLiteral)
-                                        Text("This run formed a closed loop")
+                                        Text("This run captured an area")
                                             .font(.system(size: 14))
                                             .foregroundColor(.rpWhiteLiteral.opacity(0.8))
                                         Spacer()
@@ -203,7 +203,7 @@ struct StatDetailCard: View {
 
 struct RunDetailMapView: UIViewRepresentable {
     var run: RunModel
-    @Binding var isClosedLoop: Bool
+    @Binding var hasArea: Bool
     @Binding var areaKm2: Double
     
     func makeUIView(context: Context) -> MKMapView {
@@ -225,22 +225,28 @@ struct RunDetailMapView: UIViewRepresentable {
         
         let coords = run.points.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
         
-        // Check if it's a closed loop
-        let loopResult = detectClosedLoop(coords: coords)
-        DispatchQueue.main.async {
-            self.isClosedLoop = loopResult.isClosed
-            self.areaKm2 = loopResult.area
+        // Try to compute a concave hull for coverage area
+        if let hull = computeConcaveHull(points: coords, k: 3), hull.count >= 3 {
+            // Update bindings
+            let area = polygonAreaKm2(hull)
+            DispatchQueue.main.async {
+                self.hasArea = true
+                self.areaKm2 = area
+            }
+            // Add polygon overlay
+            var hullCoords = hull
+            let poly = MKPolygon(coordinates: &hullCoords, count: hullCoords.count)
+            uiView.addOverlay(poly)
+        } else {
+            DispatchQueue.main.async {
+                self.hasArea = false
+                self.areaKm2 = 0
+            }
         }
         
-        // Add polyline for the route
+        // Add polyline for the route (always)
         let polyline = MKPolyline(coordinates: coords, count: coords.count)
         uiView.addOverlay(polyline)
-        
-        // Add polygon if closed loop
-        if loopResult.isClosed {
-            let polygon = MKPolygon(coordinates: coords, count: coords.count)
-            uiView.addOverlay(polygon)
-        }
         
         // Add start and end markers
         if let first = coords.first {
@@ -260,8 +266,14 @@ struct RunDetailMapView: UIViewRepresentable {
         // Fit the map to show the entire route
         if coords.count > 0 {
             let polyline = MKPolyline(coordinates: coords, count: coords.count)
+            var visibleRect = polyline.boundingMapRect
+            if let hull = computeConcaveHull(points: coords, k: 3), hull.count >= 3 {
+                var hullCoords = hull
+                let poly = MKPolygon(coordinates: &hullCoords, count: hullCoords.count)
+                visibleRect = visibleRect.union(poly.boundingMapRect)
+            }
             let padding = UIEdgeInsets(top: 50, left: 50, bottom: 50, right: 50)
-            uiView.setVisibleMapRect(polyline.boundingMapRect, edgePadding: padding, animated: true)
+            uiView.setVisibleMapRect(visibleRect, edgePadding: padding, animated: true)
         }
     }
     
@@ -269,57 +281,7 @@ struct RunDetailMapView: UIViewRepresentable {
         Coordinator()
     }
     
-    // MARK: - Closed Loop Detection
-    
-    private func detectClosedLoop(coords: [CLLocationCoordinate2D]) -> (isClosed: Bool, area: Double) {
-        guard coords.count >= 4 else { return (false, 0) }
-        
-        // Check if start and end points are close (within 50 meters)
-        let start = CLLocation(latitude: coords.first!.latitude, longitude: coords.first!.longitude)
-        let end = CLLocation(latitude: coords.last!.latitude, longitude: coords.last!.longitude)
-        let distance = start.distance(from: end)
-        
-        let isClosed = distance < 50.0
-        
-        var area: Double = 0.0
-        if isClosed {
-            // Calculate area using Shoelace formula (in km²)
-            area = calculatePolygonArea(coords: coords)
-        }
-        
-        return (isClosed, area)
-    }
-    
-    private func calculatePolygonArea(coords: [CLLocationCoordinate2D]) -> Double {
-        guard coords.count >= 3 else { return 0 }
-        
-        // Convert lat/lon to meters using equirectangular approximation
-        let centerLat = coords.reduce(0.0) { $0 + $1.latitude } / Double(coords.count)
-        let centerLon = coords.reduce(0.0) { $0 + $1.longitude } / Double(coords.count)
-        
-        // Convert to local coordinates in meters
-        let metersPerDegreeLat = 111132.92 // meters per degree latitude
-        let metersPerDegreeLon = 111132.92 * cos(centerLat * .pi / 180.0) // meters per degree longitude
-        
-        var localCoords: [(x: Double, y: Double)] = []
-        for coord in coords {
-            let x = (coord.longitude - centerLon) * metersPerDegreeLon
-            let y = (coord.latitude - centerLat) * metersPerDegreeLat
-            localCoords.append((x, y))
-        }
-        
-        // Shoelace formula
-        var area: Double = 0.0
-        for i in 0..<localCoords.count {
-            let j = (i + 1) % localCoords.count
-            area += localCoords[i].x * localCoords[j].y
-            area -= localCoords[j].x * localCoords[i].y
-        }
-        area = abs(area) / 2.0
-        
-        // Convert from m² to km²
-        return area / 1_000_000.0
-    }
+    // (Closed loop heuristic removed; replaced by concave hull computation)
     
     // MARK: - Coordinator
     

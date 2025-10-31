@@ -12,13 +12,36 @@ struct ContentView: View {
     @EnvironmentObject var runRecorder: RunRecorder
 
     var body: some View {
-        NavigationView {
-            HomeView()
+        TabView {
+            NavigationView {
+                HomeView()
+            }
+            .tabItem {
+                Image(systemName: "house.fill")
+                Text("Home")
+            }
+
+            NavigationView {
+                CalendarView()
+                    .navigationTitle("Calendar")
+                    .navigationBarTitleDisplayMode(.large)
+            }
+            .tabItem {
+                Image(systemName: "calendar")
+                Text("Calendar")
+            }
+
+            TerritoryMapView()
+                .ignoresSafeArea()
+            .tabItem {
+                Image(systemName: "map")
+                Text("Map")
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .preferredColorScheme(.dark)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .edgesIgnoringSafeArea(.all)
+        
     }
 }
 

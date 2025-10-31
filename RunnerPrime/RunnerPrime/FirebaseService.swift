@@ -47,10 +47,12 @@ final class FirebaseService: ObservableObject {
         // Trigger lazy initialization of auth to set up listener
         _ = auth
         
-        // Configure Firestore settings
+        // Configure Firestore settings (migrate from deprecated fields)
         let settings = FirestoreSettings()
-        settings.isPersistenceEnabled = true
-        settings.cacheSizeBytes = FirestoreCacheSizeUnlimited
+        // Prefer persistent cache; size unlimited
+        #if canImport(FirebaseFirestore)
+        settings.cacheSettings = PersistentCacheSettings(sizeBytes: NSNumber(value: FirestoreCacheSizeUnlimited))
+        #endif
         db.settings = settings
     }
     

@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreLocation
+import CoreGraphics
 
 /// TileEngine maps geographic coordinates to a fixed-size square grid (default 100m x 100m)
 /// using a Web Mercator projection (EPSG:3857) for stable, global indexing.
@@ -85,6 +86,69 @@ public struct TileEngine {
             tileCount: tiles.count,
             totalAreaSquareMeters: area
         )
+    }
+
+    /// Processes a run with an optional coverage polygon (concave hull) and returns territory information.
+    /// Merges traversed tiles with interior tiles if the polygon meets sanity thresholds.
+    public func processRun(_ run: RunModel, polygon: [CLLocationCoordinate2D]?) -> TerritoryInfo {
+        var combined: Set<String> = tilesForRun(points: run.points)
+
+        if let poly = polygon, poly.count >= 3 {
+            // Sanity: require minimum area and vertices to avoid noise
+            let areaKm2 = polygonAreaKm2(poly)
+            if areaKm2 >= 0.005 { // ~5,000 m²
+                let interior = tilesInsidePolygon(poly)
+                combined.formUnion(interior)
+            }
+        }
+        let area = areaForTiles(combined)
+        return TerritoryInfo(
+            tileIds: combined,
+            tileCount: combined.count,
+            totalAreaSquareMeters: area
+        )
+    }
+
+    /// Computes all tiles whose squares intersect the given polygon.
+    /// Polygon is given in lat/lon; we project to a Web-Mercator-like meter plane for efficient iteration.
+    public func tilesInsidePolygon(_ polygon: [CLLocationCoordinate2D]) -> Set<String> {
+        guard polygon.count >= 3 else { return [] }
+
+        // Project polygon to meters (Web Mercator approximation)
+        let projected: [CGPoint] = polygon.map { coord in
+            let (mx, my) = mercatorMeters(lat: coord.latitude, lon: coord.longitude)
+            return CGPoint(x: mx, y: my)
+        }
+
+        // Bounding box in tile coordinates
+        let xs = projected.map { $0.x }
+        let ys = projected.map { $0.y }
+        guard let minX = xs.min(), let maxX = xs.max(), let minY = ys.min(), let maxY = ys.max() else {
+            return []
+        }
+
+        let minTileX = Int(floor(minX / tileSizeMeters))
+        let maxTileX = Int(floor(maxX / tileSizeMeters))
+        let minTileY = Int(floor(minY / tileSizeMeters))
+        let maxTileY = Int(floor(maxY / tileSizeMeters))
+
+        var inside: Set<String> = []
+        inside.reserveCapacity((maxTileX - minTileX + 1) * (maxTileY - minTileY + 1))
+
+        for tx in minTileX...maxTileX {
+            for ty in minTileY...maxTileY {
+                let rect = CGRect(
+                    x: Double(tx) * tileSizeMeters,
+                    y: Double(ty) * tileSizeMeters,
+                    width: tileSizeMeters,
+                    height: tileSizeMeters
+                )
+                if polygonIntersectsRect(polygon: projected, rect: rect) {
+                    inside.insert("\(tx)_\(ty)")
+                }
+            }
+        }
+        return inside
     }
 }
 

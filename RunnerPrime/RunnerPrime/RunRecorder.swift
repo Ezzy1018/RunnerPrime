@@ -146,8 +146,16 @@ class RunRecorder: ObservableObject {
         locationManager?.stopUpdates()
         stopLiveTimer()
         
-        // Calculate territory
-        let territoryInfo = tileEngine.processRun(run)
+        // Calculate territory (concave hull coverage if available)
+        let coords = run.points.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+        let hull: [CLLocationCoordinate2D]? = {
+            if coords.count >= 10 { // minimum points for meaningful hull
+                return computeConcaveHull(points: coords, k: 3)
+            } else {
+                return nil
+            }
+        }()
+        let territoryInfo = tileEngine.processRun(run, polygon: hull)
         currentTerritoryInfo = territoryInfo
         
         // Analytics

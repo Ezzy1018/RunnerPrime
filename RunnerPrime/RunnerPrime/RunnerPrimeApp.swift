@@ -74,11 +74,14 @@ struct RunnerPrimeApp: App {
         UINavigationBar.appearance().compactAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
         
-        // Tab bar appearance
+        // Tab bar appearance - floating glass effect
         let tabAppearance = UITabBarAppearance()
-        tabAppearance.configureWithOpaqueBackground()
-        tabAppearance.backgroundColor = UIColor(red: 29/255, green: 28/255, blue: 30/255, alpha: 1.0)
-        
+        if #available(iOS 15.0, *) {
+            tabAppearance.configureWithTransparentBackground()
+            tabAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        } else {
+            tabAppearance.configureWithDefaultBackground()
+        }
         UITabBar.appearance().standardAppearance = tabAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabAppearance
         
